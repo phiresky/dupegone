@@ -41,10 +41,9 @@ digest sha1(string path, uint64_t maxlen) {
 }
 
 uint64_t minsize = 1; // ignore files smaller than x bytes 
-uint64_t buffersize = 1<<16; // size to do the initial checksumming
+uint64_t firsthash_size = 1<<16; // size to do the initial checksumming
 
 class file_info {
-	
 	digest _firsthash, _fullhash;
 	bool got_size=false, got_firsthash=false, got_fullhash=false;
 	public:
@@ -53,13 +52,13 @@ class file_info {
 		file_info(): path(""), size(0) {}
 		file_info(string path, uint64_t size) : path(path), size(size) {}
 		digest fullhash() {
-			if(buffersize>=size) return firsthash();
+			if(firsthash_size>=size) return firsthash();
 			if(!got_fullhash++) _fullhash = sha1(path, size);
 			return _fullhash;
 		}
 		/** hash of the first segment of the file */
 		digest firsthash() {
-			if(!got_firsthash++) _firsthash = sha1(path, min(buffersize,size));
+			if(!got_firsthash++) _firsthash = sha1(path, min(firsthash_size,size));
 			return _firsthash;
 		}
 };
