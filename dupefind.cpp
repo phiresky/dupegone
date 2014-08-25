@@ -32,7 +32,7 @@ namespace std { template <> struct hash<digest> {
 };}
 
 uint64_t minsize = 1; // ignore files smaller than x bytes 
-uint64_t buffersize = 1<<12; // size to do the initial checksumming
+uint64_t buffersize = 1<<16; // size to do the initial checksumming
 
 class file_info {
 	
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 	//fs::directory_entry a(fs::path("../unity/b3d/Assets/Necromancer GUI/Materials/lambert1.mat"));
 	//fs::directory_entry b(fs::path("../unity/b3d/Assets/spider/Materials/lambert1.mat"));
 
-	if(argc < 2) {
+	if(argc < 3) {
 		cout << "Usage: dupefind <directory> <minfilesize>" << endl;
 		return 0;
 	}
@@ -98,29 +98,28 @@ int main(int argc, char *argv[]) {
 	}
 	cerr<<"Found "<<map.size()<<" files, comparing"<<endl;
 
-	file_info last;
-	unordered_map<digest,file_info> samesizeset;
-	int i = 0, dupes = 0;
+	unordered_multimap<digest,file_info> samesizeset;
+	uint64_t i = 0, dupes = 0, lastsize=0;
 	for(auto& entry:map) {
 		file_info cur(entry.second.path().string(),entry.first);
 		DBG(cout<<"Current size:"<<cur.size<<endl);
 		progress_every("Comparing... ",100,i++,map.size());
 		if(cur.size < minsize) continue;
-		if(cur.size == last.size) {
-			if(samesizeset.size() == 0) {
-				samesizeset.insert(make_pair(last.firsthash(),last));
-			}
-			auto duplicate = samesizeset.insert(make_pair(cur.firsthash(),cur));
-			if(!duplicate.second) {
-				auto other = duplicate.first->second;
+		if(cur.size == lastsize) {
+			auto equals = samesizeset.equal_range(cur.firsthash());
+			for(auto it=equals.first;it!=equals.second;++it) {
+				auto other = it->second;
 				// already exists in set, possibly same file
 				if(other.fullhash()==cur.fullhash()) {
 					cout << endl << other.path << endl << cur.path << endl;
 					dupes++;
 				}
 			}
-		} else samesizeset.clear();
-		last = cur;
+		} else {
+			samesizeset.clear();
+			lastsize = cur.size;
+		}
+		samesizeset.insert(make_pair(cur.firsthash(),cur));
 	}
 	cerr << "Done, found " << dupes << " duplicates." << endl;
 }
