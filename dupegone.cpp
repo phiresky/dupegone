@@ -79,6 +79,12 @@ int main(int argc, char *argv[]) {
 	}
 	cerr<<"Found "<<map.size()<<" files, comparing"<<endl;
 
+	for(auto it = map.begin(); it != map.end();) {
+		if(map.count(it->first) < 2) map.erase(it++);
+		else ++it;
+	}
+	cerr<<map.size()<<" files after size-filtering"<<endl;
+
 	unordered_multimap<digest,file_info> samesizeset;
 	uint64_t i = 0, dupes = 0, lastsize=0;
 	for(auto& entry:map) {
