@@ -15,6 +15,7 @@ Interestingly enough, simply sha1sum-ing *every complete file* in the order `fin
     find "$1" -type f -exec sha1sum {} + | sort | uniq -w 32 --all-repeated=separate
 (by /u/Rangi42) takes 4:41 min.
 ![pic](http://i.imgur.com/SdLftak.png)
+sort -R randomizes file order. As you can see, the same thing with random file order takes 3 min vs 20 seconds.
 
 Made mostly as an exercise of C++ and algorithms/data structures
 
